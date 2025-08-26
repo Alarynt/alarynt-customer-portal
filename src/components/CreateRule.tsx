@@ -60,23 +60,19 @@ const CreateRule = () => {
     setIsSaving(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const newRule: Rule = {
-        id: Date.now().toString(),
+      const ruleData = {
         name: formData.name,
         description: formData.description,
         dsl: formData.dsl,
         status: saveAndActivate ? 'active' : formData.status,
-        priority: formData.priority,
-        createdAt: new Date().toISOString().split('T')[0],
-        executionCount: 0,
-        successRate: 0
+        priority: formData.priority
       }
       
-      // In a real app, we would save to an API here
-      console.log('Saving rule:', newRule)
+      const response = await apiService.createRule(ruleData)
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create rule')
+      }
       
       // Navigate back to rules management
       navigate('/rules', { 
@@ -85,9 +81,9 @@ const CreateRule = () => {
           type: 'success'
         }
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving rule:', error)
-      setErrors({ submit: 'Failed to save rule. Please try again.' })
+      setErrors({ submit: error.message || 'Failed to save rule. Please try again.' })
     } finally {
       setIsSaving(false)
     }

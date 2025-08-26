@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Shield, Eye, EyeOff } from 'lucide-react'
+import apiService from '../services/api'
 
 interface LoginProps {
-  onLogin: (userData: any) => void
+  onLogin: (userData: any, token: string) => void
 }
 
 const Login = ({ onLogin }: LoginProps) => {
@@ -10,23 +11,27 @@ const Login = ({ onLogin }: LoginProps) => {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError('')
     
-    // Simulate API call
-    setTimeout(() => {
-      const userData = {
-        id: '1',
-        email: email,
-        name: 'Demo User',
-        company: 'Acme Corp',
-        role: 'Admin'
+    try {
+      const response = await apiService.login({ email, password })
+      
+      if (response.success && response.data) {
+        const { token, user } = response.data
+        onLogin(user, token)
+      } else {
+        setError(response.error || 'Login failed')
       }
-      onLogin(userData)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during login')
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -43,6 +48,12 @@ const Login = ({ onLogin }: LoginProps) => {
             Your Rule Engine Customer Portal
           </p>
         </div>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">

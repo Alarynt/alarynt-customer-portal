@@ -11,6 +11,7 @@ import {
   Eye,
   CheckCircle
 } from 'lucide-react'
+import apiService from '../services/api'
 
 interface Rule {
   id: string
@@ -37,6 +38,8 @@ const RulesManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [successMessage, setSuccessMessage] = useState<string>('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     // Check for success message from navigation state
@@ -50,53 +53,28 @@ const RulesManagement = () => {
   }, [location])
 
   useEffect(() => {
-    // Mock data
-    const mockRules: Rule[] = [
-      {
-        id: '1',
-        name: 'High Value Customer Alert',
-        description: 'Send notification when customer order value exceeds threshold',
-        dsl: `WHEN order.total > 1000
-AND customer.tier == "premium"
-THEN send_email(to: "sales@company.com", subject: "High Value Order", body: "Order {order.id} from {customer.name}")`,
-        status: 'active',
-        priority: 1,
-        createdAt: '2024-01-15',
-        lastExecuted: '2024-01-26T10:30:00Z',
-        executionCount: 45,
-        successRate: 98.2
-      },
-      {
-        id: '2',
-        name: 'Inventory Low Alert',
-        description: 'Alert when product inventory falls below minimum threshold',
-        dsl: `WHEN product.inventory < product.min_threshold
-THEN send_sms(to: "warehouse@company.com", message: "Low inventory for {product.name}")
-AND update_database(table: "alerts", data: {type: "inventory", product_id: product.id})`,
-        status: 'active',
-        priority: 2,
-        createdAt: '2024-01-10',
-        lastExecuted: '2024-01-26T09:15:00Z',
-        executionCount: 23,
-        successRate: 95.7
-      },
-      {
-        id: '3',
-        name: 'Payment Processing Rule',
-        description: 'Handle payment processing based on customer risk score',
-        dsl: `WHEN payment.amount > 5000
-AND customer.risk_score > 0.7
-THEN require_approval(approver: "manager")
-ELSE process_payment(payment_id: payment.id)`,
-        status: 'draft',
-        priority: 3,
-        createdAt: '2024-01-20',
-        executionCount: 0,
-        successRate: 0
-      }
-    ]
-    setRules(mockRules)
+    loadRules()
   }, [])
+
+  const loadRules = async () => {
+    try {
+      setLoading(true)
+      setError('')
+      
+      const response = await apiService.getRules(1, 100) // Load first 100 rules
+      
+      if (response.success && response.data?.rules) {
+        setRules(response.data.rules)
+      } else {
+        setError('Failed to load rules')
+      }
+    } catch (err: any) {
+      console.error('Failed to load rules:', err)
+      setError('Failed to load rules. Please try refreshing the page.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCreateRule = () => {
     navigate('/rules/create')

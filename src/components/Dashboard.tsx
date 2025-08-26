@@ -11,6 +11,7 @@ import {
   Target
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import apiService from '../services/api'
 
 const Dashboard = () => {
   const navigate = useNavigate()
@@ -45,45 +46,47 @@ const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState<Activity[]>([])
   const [ruleExecutions, setRuleExecutions] = useState<RuleExecution[]>([])
   const [actionDistribution, setActionDistribution] = useState<ActionDistribution[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    // Simulate loading data
-    const mockStats = {
-      totalRules: 24,
-      activeRules: 18,
-      totalActions: 12,
-      successRate: 94.2
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true)
+        setError('')
+
+        // Load all dashboard data concurrently
+        const [statsResponse, activityResponse, executionsResponse, distributionResponse] = await Promise.all([
+          apiService.getDashboardStats(),
+          apiService.getDashboardActivity(),
+          apiService.getRuleExecutions(),
+          apiService.getActionDistribution()
+        ])
+
+        if (statsResponse.success && statsResponse.data) {
+          setStats(statsResponse.data)
+        }
+
+        if (activityResponse.success && activityResponse.data) {
+          setRecentActivity(activityResponse.data)
+        }
+
+        if (executionsResponse.success && executionsResponse.data) {
+          setRuleExecutions(executionsResponse.data)
+        }
+
+        if (distributionResponse.success && distributionResponse.data) {
+          setActionDistribution(distributionResponse.data)
+        }
+      } catch (err: any) {
+        console.error('Failed to load dashboard data:', err)
+        setError('Failed to load dashboard data. Please try refreshing the page.')
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const mockRecentActivity: Activity[] = [
-      { id: 1, type: 'rule_created', message: 'New rule "High Value Customer Alert" created', time: '2 minutes ago', status: 'success' },
-      { id: 2, type: 'action_executed', message: 'Email notification sent to sales team', time: '5 minutes ago', status: 'success' },
-      { id: 3, type: 'rule_triggered', message: 'Rule "Inventory Low Alert" triggered', time: '12 minutes ago', status: 'warning' },
-      { id: 4, type: 'action_failed', message: 'SMS notification failed to send', time: '1 hour ago', status: 'error' },
-      { id: 5, type: 'rule_updated', message: 'Rule "Payment Processing" updated', time: '2 hours ago', status: 'info' }
-    ]
-
-    const mockRuleExecutions: RuleExecution[] = [
-      { name: 'Mon', executions: 45, success: 42, failed: 3 },
-      { name: 'Tue', executions: 52, success: 49, failed: 3 },
-      { name: 'Wed', executions: 38, success: 36, failed: 2 },
-      { name: 'Thu', executions: 61, success: 58, failed: 3 },
-      { name: 'Fri', executions: 48, success: 45, failed: 3 },
-      { name: 'Sat', executions: 23, success: 22, failed: 1 },
-      { name: 'Sun', executions: 19, success: 18, failed: 1 }
-    ]
-
-    const mockActionDistribution: ActionDistribution[] = [
-      { name: 'Email Notifications', value: 45, color: '#3B82F6' },
-      { name: 'SMS Alerts', value: 25, color: '#10B981' },
-      { name: 'Webhook Calls', value: 20, color: '#F59E0B' },
-      { name: 'Database Updates', value: 10, color: '#EF4444' }
-    ]
-
-    setStats(mockStats)
-    setRecentActivity(mockRecentActivity)
-    setRuleExecutions(mockRuleExecutions)
-    setActionDistribution(mockActionDistribution)
+    loadDashboardData()
   }, [])
 
   const getStatusIcon = (status: string) => {
@@ -110,6 +113,26 @@ const Dashboard = () => {
       default:
         return 'text-blue-600 bg-blue-50'
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          {error}
+        </div>
+      </div>
+    )
   }
 
   return (
