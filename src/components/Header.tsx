@@ -25,6 +25,7 @@ const Header = ({ user, onLogout }: HeaderProps) => {
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Rules', href: '/rules' },
     { name: 'Actions', href: '/actions' },
+    { name: 'Activities', href: '/activities' },
     { name: 'Analytics', href: '/analytics' },
   ]
 

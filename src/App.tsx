@@ -6,6 +6,7 @@ import Header from './components/Header'
 import RulesManagement from './components/RulesManagement'
 import ActionsManagement from './components/ActionsManagement'
 import Analytics from './components/Analytics'
+import Activities from './components/Activities'
 import './App.css'
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
           <Route path="/rules" element={<RulesManagement />} />
           <Route path="/actions" element={<ActionsManagement />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/activities" element={<Activities />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
