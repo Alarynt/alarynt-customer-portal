@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import swaggerUi from 'swagger-ui-express';
 
 import { config } from './config';
+import { swaggerSpec } from './config/swagger';
 import { globalErrorHandler, notFound } from './middleware/errorHandler';
 
 // Import routes (will create these next)
@@ -60,6 +62,38 @@ if (config.nodeEnv === 'development') {
   app.use(morgan('combined'));
 }
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [System]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Server is running and healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Server is running"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2024-01-26T10:30:00.000Z"
+ *                 uptime:
+ *                   type: number
+ *                   example: 86400.123
+ *                 environment:
+ *                   type: string
+ *                   example: "development"
+ */
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -81,8 +115,36 @@ app.use(`${apiPrefix}/activities`, activitiesRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
 app.use(`${apiPrefix}/analytics`, analyticsRoutes);
 
-// API documentation endpoint
-app.get(`${apiPrefix}/docs`, (req, res) => {
+// Swagger UI configuration options
+const swaggerOptions = {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Alarynt Customer Backend API Documentation',
+  customfavIcon: '/api/favicon.ico',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    docExpansion: 'none',
+    filter: true,
+    showExtensions: true,
+    showCommonExtensions: true,
+    defaultModelsExpandDepth: 2,
+    defaultModelExpandDepth: 2,
+    tryItOutEnabled: true
+  }
+};
+
+// Swagger API documentation
+app.use(`${apiPrefix}/docs`, swaggerUi.serve);
+app.get(`${apiPrefix}/docs`, swaggerUi.setup(swaggerSpec, swaggerOptions));
+
+// API documentation JSON endpoint
+app.get(`${apiPrefix}/docs.json`, (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Legacy API documentation endpoint (for backward compatibility)
+app.get(`${apiPrefix}/info`, (req, res) => {
   res.json({
     success: true,
     message: 'Alarynt Customer Backend API',
@@ -95,7 +157,7 @@ app.get(`${apiPrefix}/docs`, (req, res) => {
       dashboard: `${apiPrefix}/dashboard`,
       analytics: `${apiPrefix}/analytics`
     },
-    documentation: 'See README.md for detailed API documentation'
+    documentation: `Visit ${req.protocol}://${req.get('host')}${apiPrefix}/docs for interactive API documentation`
   });
 });
 
