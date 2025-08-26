@@ -8,7 +8,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "validate": "node validateSchemas.js",
-    "start": "node database.js"
+    "start": "node database.js",
+    "seed": "node seed.js"
   },
   "keywords": [
     "mongodb",
@@ -21,7 +22,8 @@
   "author": "Alarynt Team",
   "license": "MIT",
   "dependencies": {
-    "mongoose": "^8.1.1"
+    "mongoose": "^8.1.1",
+    "@faker-js/faker": "^8.4.1"
   },
   "devDependencies": {
     "eslint": "^9.33.0",
