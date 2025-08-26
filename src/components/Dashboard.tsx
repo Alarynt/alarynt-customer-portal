@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { 
   TrendingUp, 
   AlertTriangle, 
@@ -13,6 +13,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [stats, setStats] = useState({
     totalRules: 0,
     activeRules: 0,
@@ -20,9 +21,30 @@ const Dashboard = () => {
     successRate: 0
   })
 
-  const [recentActivity, setRecentActivity] = useState<any[]>([])
-  const [ruleExecutions, setRuleExecutions] = useState<any[]>([])
-  const [actionDistribution, setActionDistribution] = useState<any[]>([])
+  interface Activity {
+    id: number
+    type: string
+    message: string
+    time: string
+    status: 'success' | 'warning' | 'error' | 'info'
+  }
+
+  interface RuleExecution {
+    name: string
+    executions: number
+    success: number
+    failed: number
+  }
+
+  interface ActionDistribution {
+    name: string
+    value: number
+    color: string
+  }
+
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([])
+  const [ruleExecutions, setRuleExecutions] = useState<RuleExecution[]>([])
+  const [actionDistribution, setActionDistribution] = useState<ActionDistribution[]>([])
 
   useEffect(() => {
     // Simulate loading data
@@ -33,7 +55,7 @@ const Dashboard = () => {
       successRate: 94.2
     }
 
-    const mockRecentActivity = [
+    const mockRecentActivity: Activity[] = [
       { id: 1, type: 'rule_created', message: 'New rule "High Value Customer Alert" created', time: '2 minutes ago', status: 'success' },
       { id: 2, type: 'action_executed', message: 'Email notification sent to sales team', time: '5 minutes ago', status: 'success' },
       { id: 3, type: 'rule_triggered', message: 'Rule "Inventory Low Alert" triggered', time: '12 minutes ago', status: 'warning' },
@@ -41,7 +63,7 @@ const Dashboard = () => {
       { id: 5, type: 'rule_updated', message: 'Rule "Payment Processing" updated', time: '2 hours ago', status: 'info' }
     ]
 
-    const mockRuleExecutions = [
+    const mockRuleExecutions: RuleExecution[] = [
       { name: 'Mon', executions: 45, success: 42, failed: 3 },
       { name: 'Tue', executions: 52, success: 49, failed: 3 },
       { name: 'Wed', executions: 38, success: 36, failed: 2 },
@@ -51,7 +73,7 @@ const Dashboard = () => {
       { name: 'Sun', executions: 19, success: 18, failed: 1 }
     ]
 
-    const mockActionDistribution = [
+    const mockActionDistribution: ActionDistribution[] = [
       { name: 'Email Notifications', value: 45, color: '#3B82F6' },
       { name: 'SMS Alerts', value: 25, color: '#10B981' },
       { name: 'Webhook Calls', value: 20, color: '#F59E0B' },
@@ -155,7 +177,7 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Rule Executions (Last 7 Days)</h3>
-            <button className="btn-secondary text-sm">
+            <button className="btn-secondary text-sm" onClick={() => navigate('/rules/create')}>
               <Plus className="h-4 w-4 mr-2" />
               Create Rule
             </button>
@@ -194,7 +216,7 @@ const Dashboard = () => {
                 dataKey="value"
               >
                 {actionDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={(entry as any).color} />
+                  <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip />

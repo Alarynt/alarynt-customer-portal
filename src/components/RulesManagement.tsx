@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { 
   Plus, 
   Edit, 
@@ -7,7 +8,8 @@ import {
   Pause, 
   Code, 
   Save,
-  Eye
+  Eye,
+  CheckCircle
 } from 'lucide-react'
 
 interface Rule {
@@ -24,6 +26,8 @@ interface Rule {
 }
 
 const RulesManagement = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [rules, setRules] = useState<Rule[]>([])
   const [selectedRule, setSelectedRule] = useState<Rule | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -32,6 +36,18 @@ const RulesManagement = () => {
   const [dslCode, setDslCode] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [successMessage, setSuccessMessage] = useState<string>('')
+
+  useEffect(() => {
+    // Check for success message from navigation state
+    if (location.state && location.state.message) {
+      setSuccessMessage(location.state.message)
+      // Clear the message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000)
+      // Clear the state to prevent showing the message again on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   useEffect(() => {
     // Mock data
@@ -83,9 +99,7 @@ ELSE process_payment(payment_id: payment.id)`,
   }, [])
 
   const handleCreateRule = () => {
-    setIsCreating(true)
-    setSelectedRule(null)
-    setDslCode('')
+    navigate('/rules/create')
   }
 
   const handleEditRule = (rule: Rule) => {
@@ -161,6 +175,16 @@ ELSE process_payment(payment_id: payment.id)`,
         <h1 className="text-3xl font-bold text-gray-900">Rules Management</h1>
         <p className="mt-2 text-gray-600">Create and manage your business rules using our DSL</p>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center">
+            <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+            <span className="text-green-700">{successMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
