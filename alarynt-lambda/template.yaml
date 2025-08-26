@@ -1,0 +1,223 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Alarynt Lambda Function for Rule Engine Execution'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+
+  MongoDbUri:
+    Type: String
+    Description: MongoDB connection URI
+    NoEcho: true
+
+  FromEmail:
+    Type: String
+    Default: noreply@alarynt.com
+    Description: From email address for notifications
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 512
+    Runtime: nodejs18.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        LOG_LEVEL: info
+        AWS_REGION: !Ref 'AWS::Region'
+        EMAIL_PROVIDER: ses
+        FROM_EMAIL: !Ref FromEmail
+        LAMBDA_VERSION: '1.0.0'
+
+Resources:
+  # Lambda Function
+  AlaryrtRuleEngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: index.handler
+      Description: 'Alarynt Rule Engine Lambda Function'
+      Environment:
+        Variables:
+          MONGODB_URI: !Ref MongoDbUri
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: 'arn:aws:logs:*:*:*'
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: '*'
+      Events:
+        # Scheduled execution every 5 minutes
+        ScheduledExecution:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
+            Input: |
+              {
+                "source": "aws.events",
+                "detail-type": "Scheduled Event",
+                "detail": {
+                  "schedule": "rate(5 minutes)"
+                }
+              }
+        
+        # API Gateway for manual triggering
+        ApiExecution:
+          Type: Api
+          Properties:
+            Path: /execute
+            Method: post
+            RestApiId: !Ref AlaryrtRuleEngineApi
+      
+      # Dead Letter Queue for failed executions
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt AlaryrtRuleEngineDeadLetterQueue.Arn
+
+  # API Gateway
+  AlaryrtRuleEngineApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Description: API for triggering Alarynt Rule Engine
+      Cors:
+        AllowOrigin: "'*'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowMethods: "'POST,OPTIONS'"
+      Auth:
+        ApiKeyRequired: true
+      
+  # API Key for authentication
+  AlaryrtRuleEngineApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    DependsOn: 
+      - AlaryrtRuleEngineApiStage
+    Properties:
+      Name: !Sub 'alarynt-rule-engine-${Environment}-key'
+      Description: 'API Key for Alarynt Rule Engine'
+      Enabled: true
+
+  # Usage Plan
+  AlaryrtRuleEngineUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - AlaryrtRuleEngineApiStage
+    Properties:
+      UsagePlanName: !Sub 'alarynt-rule-engine-${Environment}-usage-plan'
+      Description: 'Usage plan for Alarynt Rule Engine API'
+      ApiStages:
+        - ApiId: !Ref AlaryrtRuleEngineApi
+          Stage: !Ref Environment
+      Throttle:
+        BurstLimit: 50
+        RateLimit: 20
+      Quota:
+        Limit: 10000
+        Period: DAY
+
+  # Usage Plan Key
+  AlaryrtRuleEngineUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref AlaryrtRuleEngineApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref AlaryrtRuleEngineUsagePlan
+
+  # Dead Letter Queue
+  AlaryrtRuleEngineDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'alarynt-rule-engine-dlq-${Environment}'
+      MessageRetentionPeriod: 1209600  # 14 days
+
+  # CloudWatch Log Group
+  AlaryrtRuleEngineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/AlaryrtRuleEngineFunction-${Environment}'
+      RetentionInDays: 30
+
+  # CloudWatch Alarms
+  AlaryrtRuleEngineErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'alarynt-rule-engine-errors-${Environment}'
+      AlarmDescription: 'High error rate for Alarynt Rule Engine'
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AlaryrtRuleEngineFunction
+
+  AlaryrtRuleEngineDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'alarynt-rule-engine-duration-${Environment}'
+      AlarmDescription: 'High duration for Alarynt Rule Engine'
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 30000  # 30 seconds
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref AlaryrtRuleEngineFunction
+
+  # SNS Topic for notifications
+  AlaryrtNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'alarynt-notifications-${Environment}'
+      DisplayName: 'Alarynt Rule Engine Notifications'
+
+Outputs:
+  AlaryrtRuleEngineFunctionArn:
+    Description: 'Alarynt Rule Engine Lambda Function ARN'
+    Value: !GetAtt AlaryrtRuleEngineFunction.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-AlaryrtRuleEngineFunctionArn'
+
+  AlaryrtRuleEngineApiUrl:
+    Description: 'API Gateway endpoint URL for Alarynt Rule Engine'
+    Value: !Sub 'https://${AlaryrtRuleEngineApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    Export:
+      Name: !Sub '${AWS::StackName}-AlaryrtRuleEngineApiUrl'
+
+  AlaryrtRuleEngineApiKey:
+    Description: 'API Key for Alarynt Rule Engine'
+    Value: !Ref AlaryrtRuleEngineApiKey
+    Export:
+      Name: !Sub '${AWS::StackName}-AlaryrtRuleEngineApiKey'
+
+  AlaryrtNotificationTopicArn:
+    Description: 'SNS Topic ARN for notifications'
+    Value: !Ref AlaryrtNotificationTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-AlaryrtNotificationTopicArn'
