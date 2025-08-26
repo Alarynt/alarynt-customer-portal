@@ -22,8 +22,91 @@ const alertRequestSchema = Joi.object({
 });
 
 /**
- * POST /api/v1/alert/rule/:ruleId
- * Trigger a specific rule with the provided payload
+ * @swagger
+ * /api/v1/alert/rule/{ruleId}:
+ *   post:
+ *     summary: Execute a rule synchronously
+ *     description: |
+ *       Triggers the execution of a specific rule with the provided payload and waits for the result.
+ *       This endpoint will block until the rule execution completes and return the detailed results.
+ *     tags: [Rules]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ruleId
+ *         required: true
+ *         description: Unique identifier of the rule to execute
+ *         schema:
+ *           type: string
+ *           example: "rule-12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AlertRequest'
+ *           examples:
+ *             userLogin:
+ *               summary: User login event
+ *               value:
+ *                 payload:
+ *                   userId: "12345"
+ *                   event: "user_login"
+ *                   timestamp: "2024-01-15T10:30:00Z"
+ *                   ipAddress: "192.168.1.1"
+ *                   userAgent: "Mozilla/5.0..."
+ *                 metadata:
+ *                   source: "web-app"
+ *                   correlationId: "corr-login-12345"
+ *             transactionAlert:
+ *               summary: High-value transaction
+ *               value:
+ *                 payload:
+ *                   transactionId: "tx-98765"
+ *                   amount: 10000
+ *                   currency: "USD"
+ *                   userId: "user-456"
+ *                   merchantId: "merchant-789"
+ *                 metadata:
+ *                   source: "payment-system"
+ *                   timestamp: "2024-01-15T10:30:00Z"
+ *     responses:
+ *       200:
+ *         description: Rule executed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AlertResponse'
+ *             example:
+ *               success: true
+ *               executionId: "550e8400-e29b-41d4-a716-446655440000"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *               result:
+ *                 ruleExecuted: true
+ *                 actionsExecuted: 2
+ *                 executionTime: 150
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         description: Rule execution failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AlertResponse'
+ *             example:
+ *               success: false
+ *               executionId: "550e8400-e29b-41d4-a716-446655440000"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *               error:
+ *                 message: "Lambda execution failed"
+ *                 code: "LAMBDA_EXECUTION_FAILED"
  */
 router.post('/rule/:ruleId', 
   authenticate,
@@ -102,8 +185,84 @@ router.post('/rule/:ruleId',
 );
 
 /**
- * POST /api/v1/alert/rule/:ruleId/async
- * Trigger a specific rule asynchronously (fire-and-forget)
+ * @swagger
+ * /api/v1/alert/rule/{ruleId}/async:
+ *   post:
+ *     summary: Execute a rule asynchronously
+ *     description: |
+ *       Initiates the execution of a specific rule asynchronously and returns immediately.
+ *       This is a fire-and-forget operation that doesn't wait for the execution to complete.
+ *       Use this for non-critical rules or when you don't need immediate results.
+ *     tags: [Rules]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ruleId
+ *         required: true
+ *         description: Unique identifier of the rule to execute
+ *         schema:
+ *           type: string
+ *           example: "rule-12345"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/AlertRequest'
+ *           examples:
+ *             backgroundProcessing:
+ *               summary: Background data processing
+ *               value:
+ *                 payload:
+ *                   datasetId: "dataset-789"
+ *                   recordCount: 1000
+ *                   processType: "batch_analysis"
+ *                 metadata:
+ *                   source: "data-pipeline"
+ *                   priority: "low"
+ *             notificationRule:
+ *               summary: User notification trigger
+ *               value:
+ *                 payload:
+ *                   userId: "user-123"
+ *                   notificationType: "welcome_email"
+ *                   templateId: "welcome-v2"
+ *                 metadata:
+ *                   source: "user-service"
+ *                   correlationId: "welcome-123"
+ *     responses:
+ *       202:
+ *         description: Rule execution initiated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AsyncAlertResponse'
+ *             example:
+ *               success: true
+ *               executionId: "550e8400-e29b-41d4-a716-446655440000"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *               message: "Rule execution initiated asynchronously"
+ *               invocationId: "lambda-invocation-123"
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         description: Failed to initiate rule execution
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AsyncAlertResponse'
+ *             example:
+ *               success: false
+ *               executionId: "550e8400-e29b-41d4-a716-446655440000"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *               message: "Failed to initiate rule execution"
  */
 router.post('/rule/:ruleId/async',
   authenticate,
@@ -171,8 +330,49 @@ router.post('/rule/:ruleId/async',
 );
 
 /**
- * GET /api/v1/alert/rules
- * List all rules available to the customer
+ * @swagger
+ * /api/v1/alert/rules:
+ *   get:
+ *     summary: List customer rules
+ *     description: |
+ *       Retrieves a list of all rules available to the authenticated customer.
+ *       Returns basic rule information including name, description, status, and action count.
+ *     tags: [Rules]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of customer rules retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RulesListResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 rules:
+ *                   - id: "rule-12345"
+ *                     name: "User Login Alert"
+ *                     description: "Triggers when suspicious login activity is detected"
+ *                     tags: ["security", "authentication"]
+ *                     actionsCount: 2
+ *                     isActive: true
+ *                     updatedAt: "2024-01-15T10:30:00Z"
+ *                   - id: "rule-67890"
+ *                     name: "High Value Transaction"
+ *                     description: "Alerts on transactions above threshold"
+ *                     tags: ["financial", "fraud-detection"]
+ *                     actionsCount: 3
+ *                     isActive: true
+ *                     updatedAt: "2024-01-14T15:20:00Z"
+ *                 count: 2
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/rules',
   authenticate,
@@ -205,8 +405,68 @@ router.get('/rules',
 );
 
 /**
- * GET /api/v1/alert/rule/:ruleId
- * Get details of a specific rule
+ * @swagger
+ * /api/v1/alert/rule/{ruleId}:
+ *   get:
+ *     summary: Get rule details
+ *     description: |
+ *       Retrieves detailed information about a specific rule including its conditions,
+ *       actions, metadata, and configuration. The customer must have access to this rule.
+ *     tags: [Rules]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: ruleId
+ *         required: true
+ *         description: Unique identifier of the rule
+ *         schema:
+ *           type: string
+ *           example: "rule-12345"
+ *     responses:
+ *       200:
+ *         description: Rule details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RuleDetailsResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 rule:
+ *                   id: "rule-12345"
+ *                   name: "User Login Alert"
+ *                   description: "Triggers when suspicious login activity is detected"
+ *                   tags: ["security", "authentication"]
+ *                   version: "1.2.0"
+ *                   conditions:
+ *                     loginAttempts: "> 3"
+ *                     timeWindow: "5m"
+ *                   actions:
+ *                     - id: "action-1"
+ *                       type: "email"
+ *                       isActive: true
+ *                       config:
+ *                         recipients: ["security@company.com"]
+ *                     - id: "action-2"
+ *                       type: "webhook"
+ *                       isActive: true
+ *                       config:
+ *                         url: "https://api.company.com/webhooks/security"
+ *                   isActive: true
+ *                   createdAt: "2024-01-01T10:00:00Z"
+ *                   updatedAt: "2024-01-15T10:30:00Z"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/rule/:ruleId',
   authenticate,
@@ -243,8 +503,41 @@ router.get('/rule/:ruleId',
 );
 
 /**
- * GET /api/v1/alert/health
- * Health check endpoint that also checks Lambda connectivity
+ * @swagger
+ * /api/v1/alert/health:
+ *   get:
+ *     summary: Comprehensive health check
+ *     description: |
+ *       Performs a comprehensive health check including API status and Lambda connectivity.
+ *       This endpoint is more detailed than the basic `/health` endpoint and verifies
+ *       that the system can execute rules properly.
+ *     tags: [System]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: System is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthResponse'
+ *             example:
+ *               success: true
+ *               data:
+ *                 api: "healthy"
+ *                 lambda: "healthy"
+ *                 timestamp: "2024-01-15T10:30:00Z"
+ *       503:
+ *         description: System is unhealthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/HealthResponse'
+ *             example:
+ *               success: false
+ *               data:
+ *                 api: "healthy"
+ *                 lambda: "unhealthy"
+ *                 timestamp: "2024-01-15T10:30:00Z"
  */
 router.get('/health',
   optionalAuth,
@@ -271,8 +564,50 @@ router.get('/health',
 );
 
 /**
- * POST /api/v1/alert/test
- * Test Lambda connectivity (authenticated endpoint)
+ * @swagger
+ * /api/v1/alert/test:
+ *   post:
+ *     summary: Test Lambda connectivity
+ *     description: |
+ *       Tests the connection to AWS Lambda and verifies that rule execution infrastructure
+ *       is working correctly. This is an authenticated endpoint that performs actual
+ *       connectivity tests and returns detailed diagnostics.
+ *     tags: [System]
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lambda connectivity test completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TestResponse'
+ *             examples:
+ *               success:
+ *                 summary: Successful test
+ *                 value:
+ *                   success: true
+ *                   data:
+ *                     lambdaHealth: "healthy"
+ *                     responseTime: 120
+ *                     region: "us-east-1"
+ *                     version: "1.0.0"
+ *                   timestamp: "2024-01-15T10:30:00Z"
+ *               failure:
+ *                 summary: Failed test
+ *                 value:
+ *                   success: false
+ *                   data:
+ *                     lambdaHealth: "unhealthy"
+ *                     error: "Connection timeout"
+ *                     lastSuccessfulTest: "2024-01-15T09:00:00Z"
+ *                   timestamp: "2024-01-15T10:30:00Z"
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       429:
+ *         $ref: '#/components/responses/RateLimitError'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/test',
   authenticate,

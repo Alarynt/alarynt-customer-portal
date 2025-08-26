@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
 import { createLogger } from './utils/logger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { swaggerSpec } from './config/swagger';
 import alertRoutes from './routes/alertRoutes';
 
 // Load environment variables
@@ -44,6 +46,29 @@ app.use((req: Request, res: Response, next) => {
   next();
 });
 
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Basic health check
+ *     description: |
+ *       Simple health check endpoint that returns the basic API status.
+ *       This endpoint doesn't check external dependencies and always returns 200 
+ *       if the API is running.
+ *     tags: [System]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BasicHealthResponse'
+ *             example:
+ *               status: "healthy"
+ *               timestamp: "2024-01-15T10:30:00Z"
+ *               version: "1.0.0"
+ */
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.json({
@@ -51,6 +76,21 @@ app.get('/health', (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || '1.0.0',
   });
+});
+
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Alarynt HTTP Alert API',
+  swaggerOptions: {
+    persistAuthorization: true,
+  },
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req: Request, res: Response) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // API routes
