@@ -26,6 +26,7 @@ const Header = ({ user, onLogout }: HeaderProps) => {
     { name: 'Rules', href: '/rules' },
     { name: 'Actions', href: '/actions' },
     { name: 'Analytics', href: '/analytics' },
+    { name: 'Help', href: '/help' },
   ]
 
   const isActive = (path: string) => location.pathname === path
