@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
   Plus, 
   Edit, 
@@ -28,6 +29,7 @@ interface Action {
 }
 
 const ActionsManagement = () => {
+  const navigate = useNavigate()
   const [actions, setActions] = useState<Action[]>([])
   const [selectedAction, setSelectedAction] = useState<Action | null>(null)
   const [isCreating, setIsCreating] = useState(false)
@@ -121,10 +123,7 @@ const ActionsManagement = () => {
   }, [])
 
   const handleCreateAction = () => {
-    setIsCreating(true)
-    setSelectedAction(null)
-    setSelectedActionType('email')
-    setShowConfig(true)
+    navigate('/actions/create')
   }
 
   const handleEditAction = (action: Action) => {
