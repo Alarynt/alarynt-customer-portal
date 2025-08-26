@@ -1,37 +1,44 @@
 {
-  "name": "alarynt-mongod",
-  "version": "1.0.0",
-  "description": "MongoDB schemas and models for the Alarynt Rule Engine system",
-  "main": "schemas.js",
+  "name": "alarynt-customer-portal",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "test": "jest",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "validate": "node validateSchemas.js"
+    "preview": "vite preview",
+    "mongodb:install": "cd alarynt-mongodb && npm install",
+    "mongodb:start": "cd alarynt-mongodb && npm start",
+    "mongodb:test": "cd alarynt-mongodb && npm test",
+    "install:all": "npm install && npm run mongodb:install"
   },
-  "keywords": [
-    "mongodb",
-    "mongoose",
-    "schemas",
-    "alarynt",
-    "rule-engine",
-    "business-rules"
-  ],
-  "author": "Alarynt Team",
-  "license": "MIT",
   "dependencies": {
-    "mongoose": "^8.1.1"
+    "@types/react-router-dom": "^5.3.3",
+    "@types/recharts": "^1.8.29",
+    "lucide-react": "^0.541.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.8.2",
+    "recharts": "^3.1.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@tailwindcss/forms": "^0.5.10",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/xlsx": "^0.0.35",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.33.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.2.5"
-  },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/alarynt/alarynt-mongod.git"
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2"
   }
 }

@@ -1,308 +1,240 @@
-# Alarynt MongoDB Schemas
+# Alarynt Rule Engine Monorepo
 
-This repository contains comprehensive MongoDB schemas for the Alarynt Rule Engine system, designed to support the `alarynt-customer-portal` frontend application.
+This monorepo contains both the **customer portal frontend** and the **MongoDB schemas** for the Alarynt Rule Engine system.
 
-## Overview
+## 📁 Repository Structure
 
-The schemas are organized into three main categories:
+```
+alarynt-customer-portal/
+├── src/                    # React frontend application
+├── public/                 # Static assets
+├── index.html             # Main HTML template
+├── package.json           # Frontend dependencies
+├── tailwind.config.js     # Tailwind CSS configuration
+├── vite.config.ts         # Vite build configuration
+└── alarynt-mongodb/       # MongoDB schemas package
+    ├── schemas.js         # MongoDB schemas with Mongoose models
+    ├── database.js        # Connection utilities and initialization
+    ├── package.json       # MongoDB package dependencies
+    └── README.md          # MongoDB documentation
+```
 
-### 🏗️ Core Application Schemas
-- **User** - Authentication and user management
-- **Rule** - Business rules with DSL (Domain Specific Language)
-- **Action** - Actions that can be executed by rules
-- **Activity** - System activity logs and audit trail
-- **PerformanceData** - System performance metrics over time
-- **RulePerformance** - Individual rule performance tracking
-- **ActionPerformance** - Individual action performance tracking
-- **ErrorAnalysis** - Error tracking and categorization
+## 🚀 Quick Start
 
-### 🏢 Business Domain Schemas
-- **Customer** - Customer data referenced in business rules
-- **Order** - Order data referenced in business rules
-- **Product** - Product/inventory data referenced in business rules
+### Frontend Development
+```bash
+# Install dependencies
+npm install
 
-### 📊 Rule Execution Schemas
-- **RuleExecution** - Track individual rule executions for auditing and debugging
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### MongoDB Setup
+```bash
+# Navigate to MongoDB package
+cd alarynt-mongodb
+
+# Install MongoDB dependencies
+npm install
+
+# Start database initialization
+npm start
+```
+
+---
+
+# Frontend: Alarynt Rule Engine Customer Portal
+
+A modern, responsive web application for managing business rules and actions using a Domain Specific Language (DSL). Built with React, TypeScript, and Tailwind CSS.
 
 ## Features
 
-- **Full TypeScript Support** - All schemas are designed with type safety in mind
-- **Comprehensive Indexing** - Optimized database indexes for performance
-- **Validation Rules** - Built-in data validation using Mongoose validators
-- **Relationship Mapping** - Proper references between related entities
-- **Audit Trail Support** - Timestamps and user tracking for all operations
+### 🔐 Authentication & User Management
+- **Login System**: Secure authentication with demo credentials
+- **User Dashboard**: Personalized view with user information
+- **Session Management**: Persistent login state with localStorage
 
-## Installation
+### 📊 Dashboard
+- **Overview Cards**: Key metrics including total rules, active rules, actions, and success rate
+- **Performance Charts**: Visual representation of rule executions and action distribution
+- **Recent Activity**: Real-time feed of system events and rule triggers
+- **Interactive Metrics**: Hover effects and detailed tooltips
 
-```bash
-npm install
+### 🎯 Rules Management
+- **DSL Editor**: Intuitive interface for writing business rules
+- **Rule Builder**: Visual rule creation with syntax highlighting
+- **Rule Library**: Comprehensive list of all business rules
+- **Status Management**: Activate, deactivate, and manage rule states
+- **Search & Filter**: Find rules by name, description, or status
+
+### ⚡ Actions Management
+- **Action Types**: Support for email, SMS, webhook, and database actions
+- **Configuration Panel**: Easy setup for different action types
+- **Testing Interface**: Validate actions before deployment
+- **Performance Tracking**: Monitor execution success rates
+
+### 📈 Analytics & Monitoring
+- **Performance Metrics**: Track rule execution performance over time
+- **Error Analysis**: Identify and categorize system issues
+- **Trend Analysis**: Historical data visualization with customizable time ranges
+- **Export Capabilities**: Download reports and analytics data
+
+### 🎨 Modern UI/UX
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **Dark/Light Theme**: Clean, professional interface
+- **Interactive Elements**: Hover effects, transitions, and animations
+- **Accessibility**: WCAG compliant design patterns
+
+## Technology Stack
+
+- **Frontend**: React 19 + TypeScript
+- **Styling**: Tailwind CSS with custom components
+- **Charts**: Recharts for data visualization
+- **Icons**: Lucide React for consistent iconography
+- **Routing**: React Router for navigation
+- **Build Tool**: Vite for fast development and building
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd alarynt-customer-portal
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:5173`
+
+### Demo Credentials
+For demonstration purposes, you can use any email/password combination to log in.
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── Login.tsx       # Authentication component
+│   ├── Header.tsx      # Navigation header
+│   ├── Dashboard.tsx   # Main dashboard
+│   ├── RulesManagement.tsx  # Rules management interface
+│   ├── ActionsManagement.tsx # Actions configuration
+│   └── Analytics.tsx   # Performance analytics
+├── App.tsx             # Main application component
+├── main.tsx            # Application entry point
+└── index.css           # Global styles and Tailwind imports
 ```
 
-## Usage
+## DSL (Domain Specific Language)
 
-### Basic Setup
-
-```javascript
-const mongoose = require('mongoose');
-const schemas = require('./schemas');
-
-// Connect to MongoDB
-await mongoose.connect('mongodb://localhost:27017/alarynt-rules');
-
-// Use the schemas
-const { User, Rule, Action, Customer, Order, Product } = schemas;
-```
-
-### Creating a User
-
-```javascript
-const newUser = new User({
-  id: 'user_123',
-  email: 'user@company.com',
-  name: 'John Doe',
-  company: 'Acme Corp',
-  role: 'Admin',
-  password: 'hashedPassword'
-});
-
-await newUser.save();
-```
-
-### Creating a Business Rule
-
-```javascript
-const businessRule = new Rule({
-  id: 'rule_456',
-  name: 'High Value Customer Alert',
-  description: 'Send notification when customer order exceeds threshold',
-  dsl: `WHEN order.total > 1000
-AND customer.tier == "premium"
-THEN send_email(to: "sales@company.com", subject: "High Value Order")`,
-  status: 'active',
-  priority: 1,
-  createdBy: user._id
-});
-
-await businessRule.save();
-```
-
-### Creating an Action
-
-```javascript
-const emailAction = new Action({
-  id: 'action_789',
-  name: 'Sales Team Email',
-  description: 'Send email notifications to sales team',
-  type: 'email',
-  config: {
-    to: 'sales@company.com',
-    subject: 'High Value Order Alert',
-    template: 'high-value-order'
-  },
-  status: 'active',
-  createdBy: user._id
-});
-
-await emailAction.save();
-```
-
-### Recording Activity
-
-```javascript
-const activity = new Activity({
-  id: 'activity_101',
-  type: 'rule_created',
-  message: 'New rule "High Value Customer Alert" created',
-  status: 'success',
-  userId: user._id,
-  ruleId: rule._id
-});
-
-await activity.save();
-```
-
-## Schema Details
-
-### Core Entities
-
-#### User Schema
-- Handles authentication and user management
-- Supports role-based access control
-- Tracks login history and user activity
-
-#### Rule Schema
-- Stores business rules with DSL syntax
-- Supports priority-based execution
-- Tracks execution statistics and success rates
-- Maintains audit trail with creator and modification history
-
-#### Action Schema
-- Flexible configuration storage for different action types
-- Supports email, SMS, webhook, database, and notification actions
-- Performance tracking and error handling
-
-#### Activity Schema
-- Comprehensive audit trail for all system events
-- Filterable by type, status, user, and time range
-- Supports detailed error tracking and debugging
-
-### Business Domain Entities
-
-#### Customer Schema
-- Customer tier management (basic, premium, enterprise, vip)
-- Order history and spending analytics
-- Address and contact information management
-
-#### Order Schema
-- Complete order lifecycle tracking
-- Item-level details with product references
-- Payment and shipping status management
-- Financial calculations (subtotal, tax, shipping)
-
-#### Product Schema
-- Inventory management with threshold alerts
-- Supplier relationship tracking
-- Category-based organization
-- Full-text search capabilities
-
-### Performance and Monitoring
-
-#### PerformanceData Schema
-- Time-series data for system metrics
-- Execution counts and response times
-- Success/failure tracking over time
-
-#### RulePerformance & ActionPerformance
-- Individual entity performance tracking
-- Average response times and success rates
-- Historical trend analysis
-
-#### ErrorAnalysis Schema
-- Error categorization and impact assessment
-- Resolution tracking and status management
-- Statistical analysis for system improvements
-
-## Database Indexes
-
-The schemas include optimized indexes for:
-
-- **Performance**: Frequently queried fields like status, dates, and execution counts
-- **Search**: Full-text search on names and descriptions
-- **Relationships**: Foreign key references for efficient joins
-- **Analytics**: Time-based queries for reporting and monitoring
-
-## DSL (Domain Specific Language) Support
-
-The system supports a powerful DSL for defining business rules:
+The portal includes a powerful DSL for defining business rules:
 
 ```dsl
 WHEN order.total > 1000
-AND customer.tier == "premium"  
-THEN send_email(to: "sales@company.com", subject: "High Value Order")
-AND update_database(table: "alerts", data: {type: "high_value", customer_id: customer.id})
+AND customer.tier == "premium"
+THEN send_email(to: "sales@company.com", 
+                subject: "High Value Order", 
+                body: "Order {order.id} from {customer.name}")
 ```
 
 ### DSL Features
-- Conditional logic with WHEN, AND, OR statements
-- Action execution with THEN clauses
-- Variable interpolation with {variable} syntax
-- Multiple action chaining
+- **Conditional Logic**: WHEN, AND, OR statements
+- **Action Execution**: THEN clauses for business actions
+- **Variable Interpolation**: Dynamic data insertion with {variable} syntax
+- **Multiple Actions**: Chain actions with AND operators
 
-## Data Relationships
+## Available Scripts
 
-```
-User (1) -> (N) Rules
-User (1) -> (N) Actions
-User (1) -> (N) Activities
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-Rule (1) -> (N) RuleExecutions
-Action (1) -> (N) ActionPerformance
+## Customization
 
-Customer (1) -> (N) Orders
-Order (N) -> (N) Products (via items array)
+### Styling
+The application uses Tailwind CSS with custom component classes. Modify `src/index.css` to add new utility classes or override existing styles.
 
-RuleExecution (N) -> (1) Rule
-RuleExecution (N) -> (N) Actions (via actionsExecuted array)
-```
+### Components
+All components are built with TypeScript interfaces for type safety. Extend the existing interfaces to add new features.
 
-## Best Practices
+### Data Sources
+Currently uses mock data. Replace the mock data functions in each component with actual API calls when connecting to a backend.
 
-### 1. Always use transactions for related operations
-```javascript
-const session = await mongoose.startSession();
-session.startTransaction();
+---
 
-try {
-  await rule.save({ session });
-  await activity.save({ session });
-  await session.commitTransaction();
-} catch (error) {
-  await session.abortTransaction();
-  throw error;
-} finally {
-  session.endSession();
-}
-```
+# Backend: MongoDB Schemas
 
-### 2. Use proper indexing for queries
-```javascript
-// Good - uses indexed field
-const activeRules = await Rule.find({ status: 'active' });
+The `alarynt-mongodb/` directory contains comprehensive MongoDB schemas for persistent data storage. See [`alarynt-mongodb/README.md`](./alarynt-mongodb/README.md) for detailed documentation.
 
-// Good - uses compound index
-const userActivities = await Activity
-  .find({ userId: user._id })
-  .sort({ timestamp: -1 });
-```
-
-### 3. Validate data before saving
-```javascript
-const rule = new Rule(ruleData);
-const validationError = rule.validateSync();
-if (validationError) {
-  throw new Error(`Validation failed: ${validationError.message}`);
-}
-await rule.save();
-```
-
-### 4. Use aggregation for analytics
-```javascript
-const ruleStats = await Rule.aggregate([
-  { $match: { status: 'active' } },
-  { $group: {
-    _id: null,
-    totalRules: { $sum: 1 },
-    avgSuccessRate: { $avg: '$successRate' },
-    totalExecutions: { $sum: '$executionCount' }
-  }}
-]);
-```
-
-## Environment Variables
-
-```env
-MONGODB_URI=mongodb://localhost:27017/alarynt-rules
-MONGODB_OPTIONS=retryWrites=true&w=majority
-```
-
-## Testing
+## MongoDB Quick Start
 
 ```bash
-npm test
+# Navigate to MongoDB package
+cd alarynt-mongodb
+
+# Install dependencies
+npm install
+
+# Initialize database with sample data
+npm start
 ```
+
+### Key Schemas
+- **User** - Authentication and user management
+- **Rule** - Business rules with DSL support
+- **Action** - Executable actions (email, SMS, webhook, database, notification)
+- **Activity** - System audit trail and activity logging
+- **Customer** - Customer data with tier management
+- **Order** - Complete order lifecycle tracking
+- **Product** - Inventory management with threshold alerts
+
+---
+
+## Future Enhancements
+
+- **Backend Integration**: Connect frontend to MongoDB for persistent data storage
+- **Real-time Updates**: WebSocket integration for live rule execution updates
+- **Advanced DSL**: Enhanced syntax with loops, functions, and complex conditions
+- **Rule Testing**: Built-in testing framework for rule validation
+- **API Documentation**: Swagger/OpenAPI integration
+- **Multi-tenancy**: Support for multiple organizations
+- **Audit Logging**: Comprehensive audit trail for compliance
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run linting and formatting
-6. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support and questions, please contact the development team or create an issue in the repository.
 
 ---
 
