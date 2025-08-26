@@ -36,6 +36,7 @@ const ActionsManagement = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedActionType, setSelectedActionType] = useState<string>('email')
 
   useEffect(() => {
     // Mock data
@@ -122,11 +123,13 @@ const ActionsManagement = () => {
   const handleCreateAction = () => {
     setIsCreating(true)
     setSelectedAction(null)
+    setSelectedActionType('email')
     setShowConfig(true)
   }
 
   const handleEditAction = (action: Action) => {
     setSelectedAction(action)
+    setSelectedActionType(action.type)
     setIsEditing(true)
     setShowConfig(true)
   }
@@ -161,6 +164,8 @@ const ActionsManagement = () => {
         return <Webhook className="h-5 w-5 text-purple-500" />
       case 'database':
         return <Database className="h-5 w-5 text-orange-500" />
+      case 'notification':
+        return <Settings className="h-5 w-5 text-indigo-500" />
       default:
         return <Settings className="h-5 w-5 text-gray-500" />
     }
@@ -176,6 +181,8 @@ const ActionsManagement = () => {
         return 'text-purple-600 bg-purple-50'
       case 'database':
         return 'text-orange-600 bg-orange-50'
+      case 'notification':
+        return 'text-indigo-600 bg-indigo-50'
       default:
         return 'text-gray-600 bg-gray-50'
     }
@@ -208,7 +215,7 @@ const ActionsManagement = () => {
     if (!action && !isCreating) return null
 
     const config = action?.config || {}
-    const type = action?.type || 'email'
+    const type = selectedActionType
 
     return (
       <div className="space-y-4">
@@ -240,7 +247,11 @@ const ActionsManagement = () => {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Action Type
           </label>
-          <select className="input-field" defaultValue={type}>
+          <select 
+            className="input-field" 
+            value={selectedActionType}
+            onChange={(e) => setSelectedActionType(e.target.value)}
+          >
             <option value="email">Email</option>
             <option value="sms">SMS</option>
             <option value="webhook">Webhook</option>
@@ -327,6 +338,70 @@ const ActionsManagement = () => {
           </div>
         )}
 
+        {type === 'database' && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Table</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="table_name"
+                defaultValue={config.table || ''}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Operation</label>
+              <select className="input-field" defaultValue={config.operation || 'INSERT'}>
+                <option value="INSERT">INSERT</option>
+                <option value="UPDATE">UPDATE</option>
+                <option value="DELETE">DELETE</option>
+                <option value="SELECT">SELECT</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data (JSON)</label>
+              <textarea
+                className="input-field"
+                rows={4}
+                placeholder='{"field": "value", "timestamp": "{current_timestamp}"}'
+                defaultValue={config.data ? JSON.stringify(config.data, null, 2) : ''}
+              />
+            </div>
+          </div>
+        )}
+
+        {type === 'notification' && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="Notification title"
+                defaultValue={config.title || ''}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea
+                className="input-field"
+                rows={3}
+                placeholder="Notification message"
+                defaultValue={config.message || ''}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <select className="input-field" defaultValue={config.priority || 'normal'}>
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="flex space-x-2 pt-4">
           <button
             onClick={handleSaveAction}
@@ -340,6 +415,7 @@ const ActionsManagement = () => {
               setIsCreating(false)
               setIsEditing(false)
               setSelectedAction(null)
+              setSelectedActionType('email')
               setShowConfig(false)
             }}
             className="btn-secondary"
@@ -395,6 +471,7 @@ const ActionsManagement = () => {
           <option value="sms">SMS</option>
           <option value="webhook">Webhook</option>
           <option value="database">Database</option>
+          <option value="notification">Notification</option>
         </select>
         
         <select
