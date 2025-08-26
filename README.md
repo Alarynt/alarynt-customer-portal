@@ -1,53 +1,4 @@
-# Alarynt Rule Engine Monorepo
-
-This monorepo contains both the **customer portal frontend** and the **MongoDB schemas** for the Alarynt Rule Engine system.
-
-## 📁 Repository Structure
-
-```
-alarynt-customer-portal/
-├── src/                    # React frontend application
-├── public/                 # Static assets
-├── index.html             # Main HTML template
-├── package.json           # Frontend dependencies
-├── tailwind.config.js     # Tailwind CSS configuration
-├── vite.config.ts         # Vite build configuration
-└── alarynt-mongodb/       # MongoDB schemas package
-    ├── schemas.js         # MongoDB schemas with Mongoose models
-    ├── database.js        # Connection utilities and initialization
-    ├── package.json       # MongoDB package dependencies
-    └── README.md          # MongoDB documentation
-```
-
-## 🚀 Quick Start
-
-### Frontend Development
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-### MongoDB Setup
-```bash
-# Navigate to MongoDB package
-cd alarynt-mongodb
-
-# Install MongoDB dependencies
-npm install
-
-# Start database initialization
-npm start
-```
-
----
-
-# Frontend: Alarynt Rule Engine Customer Portal
+# Alarynt Rule Engine Customer Portal
 
 A modern, responsive web application for managing business rules and actions using a Domain Specific Language (DSL). Built with React, TypeScript, and Tailwind CSS.
 
@@ -180,39 +131,9 @@ All components are built with TypeScript interfaces for type safety. Extend the 
 ### Data Sources
 Currently uses mock data. Replace the mock data functions in each component with actual API calls when connecting to a backend.
 
----
-
-# Backend: MongoDB Schemas
-
-The `alarynt-mongodb/` directory contains comprehensive MongoDB schemas for persistent data storage. See [`alarynt-mongodb/README.md`](./alarynt-mongodb/README.md) for detailed documentation.
-
-## MongoDB Quick Start
-
-```bash
-# Navigate to MongoDB package
-cd alarynt-mongodb
-
-# Install dependencies
-npm install
-
-# Initialize database with sample data
-npm start
-```
-
-### Key Schemas
-- **User** - Authentication and user management
-- **Rule** - Business rules with DSL support
-- **Action** - Executable actions (email, SMS, webhook, database, notification)
-- **Activity** - System audit trail and activity logging
-- **Customer** - Customer data with tier management
-- **Order** - Complete order lifecycle tracking
-- **Product** - Inventory management with threshold alerts
-
----
-
 ## Future Enhancements
 
-- **Backend Integration**: Connect frontend to MongoDB for persistent data storage
+- **Backend Integration**: Connect to MongoDB for persistent data storage
 - **Real-time Updates**: WebSocket integration for live rule execution updates
 - **Advanced DSL**: Enhanced syntax with loops, functions, and complex conditions
 - **Rule Testing**: Built-in testing framework for rule validation

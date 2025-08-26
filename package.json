@@ -7,11 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "mongodb:install": "cd alarynt-mongodb && npm install",
-    "mongodb:start": "cd alarynt-mongodb && npm start",
-    "mongodb:test": "cd alarynt-mongodb && npm test",
-    "install:all": "npm install && npm run mongodb:install"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
