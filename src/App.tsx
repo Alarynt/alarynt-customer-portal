@@ -7,6 +7,8 @@ import RulesManagement from './components/RulesManagement'
 import CreateRule from './components/CreateRule'
 import ActionsManagement from './components/ActionsManagement'
 import Analytics from './components/Analytics'
+import Activities from './components/Activities'
+import Help from './components/Help'
 import './App.css'
 
 function App() {
@@ -52,6 +54,8 @@ function App() {
           <Route path="/rules/create" element={<CreateRule />} />
           <Route path="/actions" element={<ActionsManagement />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { 
   TrendingUp, 
   AlertTriangle, 
@@ -229,10 +229,10 @@ const Dashboard = () => {
       <div className="card">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-          <button className="btn-secondary text-sm">
+          <Link to="/activities" className="btn-secondary text-sm">
             <Activity className="h-4 w-4 mr-2" />
             View All
-          </button>
+          </Link>
         </div>
         <div className="space-y-4">
           {recentActivity.map((activity) => (

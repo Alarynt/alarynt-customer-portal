@@ -7,7 +7,8 @@ import {
   BarChart3,
   Calendar,
   Download,
-  Filter
+  Filter,
+  ChevronDown
 } from 'lucide-react'
 import { 
   XAxis, 
@@ -23,6 +24,7 @@ import {
   AreaChart,
   Area
 } from 'recharts'
+import * as XLSX from 'xlsx'
 
 interface PerformanceData {
   date: string
@@ -62,6 +64,7 @@ const Analytics = () => {
   const [rulePerformance, setRulePerformance] = useState<RulePerformance[]>([])
   const [actionPerformance, setActionPerformance] = useState<ActionPerformance[]>([])
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysis[]>([])
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false)
 
   useEffect(() => {
     // Mock data based on time range
@@ -116,6 +119,21 @@ const Analytics = () => {
     setErrorAnalysis(mockErrorAnalysis)
   }, [timeRange])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (!target.closest('.export-dropdown')) {
+        setIsExportDropdownOpen(false)
+      }
+    }
+
+    if (isExportDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isExportDropdownOpen])
+
   const getMetricData = () => {
     if (selectedMetric === 'executions') return performanceData.map(d => ({ date: d.date, value: d.executions }))
     if (selectedMetric === 'success') return performanceData.map(d => ({ date: d.date, value: d.success }))
@@ -150,6 +168,159 @@ const Analytics = () => {
       case 'Medium': return 'text-yellow-600 bg-yellow-50'
       case 'Low': return 'text-green-600 bg-green-50'
       default: return 'text-gray-600 bg-gray-50'
+    }
+  }
+
+  // Export functions
+  const exportToCSV = () => {
+    const data = [
+      // Performance data
+      ...performanceData.map(item => ({
+        Type: 'Performance',
+        Date: item.date,
+        Executions: item.executions,
+        Success: item.success,
+        Failed: item.failed,
+        'Response Time (ms)': item.responseTime
+      })),
+      // Rule performance data
+      ...rulePerformance.map(item => ({
+        Type: 'Rule Performance',
+        Name: item.name,
+        Executions: item.executions,
+        Success: item.success,
+        Failed: item.failed,
+        'Avg Response (ms)': item.avgResponse
+      })),
+      // Action performance data
+      ...actionPerformance.map(item => ({
+        Type: 'Action Performance',
+        Name: item.name,
+        Executions: item.executions,
+        Success: item.success,
+        Failed: item.failed,
+        'Avg Response (ms)': item.avgResponse
+      })),
+      // Error analysis data
+      ...errorAnalysis.map(item => ({
+        Type: 'Error Analysis',
+        'Error Type': item.type,
+        Count: item.count,
+        'Percentage': item.percentage,
+        Impact: item.impact
+      }))
+    ]
+
+    const csv = [
+      Object.keys(data[0]).join(','),
+      ...data.map(row => Object.values(row).map(value => `"${value}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `analytics-report-${timeRange}-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+  }
+
+  const exportToJSON = () => {
+    const data = {
+      reportInfo: {
+        generatedAt: new Date().toISOString(),
+        timeRange: timeRange,
+        selectedMetric: selectedMetric
+      },
+      performanceData,
+      rulePerformance,
+      actionPerformance,
+      errorAnalysis,
+      summary: {
+        totalExecutions: performanceData.reduce((sum, d) => sum + d.executions, 0),
+        successRate: ((performanceData.reduce((sum, d) => sum + d.success, 0) / 
+                     performanceData.reduce((sum, d) => sum + d.executions, 0)) * 100),
+        avgResponseTime: Math.round(performanceData.reduce((sum, d) => sum + d.responseTime, 0) / performanceData.length),
+        totalFailures: performanceData.reduce((sum, d) => sum + d.failed, 0)
+      }
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `analytics-report-${timeRange}-${new Date().toISOString().split('T')[0]}.json`
+    link.click()
+  }
+
+  const exportToExcel = () => {
+    const workbook = XLSX.utils.book_new()
+
+    // Performance Data Sheet
+    const performanceSheet = XLSX.utils.json_to_sheet(performanceData.map(item => ({
+      Date: item.date,
+      Executions: item.executions,
+      Success: item.success,
+      Failed: item.failed,
+      'Response Time (ms)': item.responseTime
+    })))
+    XLSX.utils.book_append_sheet(workbook, performanceSheet, 'Performance Data')
+
+    // Rule Performance Sheet
+    const ruleSheet = XLSX.utils.json_to_sheet(rulePerformance.map(item => ({
+      'Rule Name': item.name,
+      Executions: item.executions,
+      Success: item.success,
+      Failed: item.failed,
+      'Avg Response (ms)': item.avgResponse
+    })))
+    XLSX.utils.book_append_sheet(workbook, ruleSheet, 'Rule Performance')
+
+    // Action Performance Sheet
+    const actionSheet = XLSX.utils.json_to_sheet(actionPerformance.map(item => ({
+      'Action Name': item.name,
+      Executions: item.executions,
+      Success: item.success,
+      Failed: item.failed,
+      'Avg Response (ms)': item.avgResponse
+    })))
+    XLSX.utils.book_append_sheet(workbook, actionSheet, 'Action Performance')
+
+    // Error Analysis Sheet
+    const errorSheet = XLSX.utils.json_to_sheet(errorAnalysis.map(item => ({
+      'Error Type': item.type,
+      Count: item.count,
+      'Percentage': item.percentage,
+      Impact: item.impact
+    })))
+    XLSX.utils.book_append_sheet(workbook, errorSheet, 'Error Analysis')
+
+    // Summary Sheet
+    const summaryData = [{
+      'Total Executions': performanceData.reduce((sum, d) => sum + d.executions, 0),
+      'Success Rate (%)': ((performanceData.reduce((sum, d) => sum + d.success, 0) / 
+                           performanceData.reduce((sum, d) => sum + d.executions, 0)) * 100).toFixed(1),
+      'Avg Response Time (ms)': Math.round(performanceData.reduce((sum, d) => sum + d.responseTime, 0) / performanceData.length),
+      'Total Failures': performanceData.reduce((sum, d) => sum + d.failed, 0),
+      'Time Range': timeRange,
+      'Generated At': new Date().toLocaleString()
+    }]
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData)
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
+
+    XLSX.writeFile(workbook, `analytics-report-${timeRange}-${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
+  const handleExport = (format: 'csv' | 'json' | 'excel') => {
+    setIsExportDropdownOpen(false)
+    
+    switch (format) {
+      case 'csv':
+        exportToCSV()
+        break
+      case 'json':
+        exportToJSON()
+        break
+      case 'excel':
+        exportToExcel()
+        break
     }
   }
 
@@ -190,10 +361,41 @@ const Analytics = () => {
           </select>
         </div>
         
-        <button className="btn-secondary ml-auto flex items-center">
-          <Download className="h-4 w-4 mr-2" />
-          Export Report
-        </button>
+        <div className="relative ml-auto export-dropdown">
+          <button 
+            onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+            className="btn-secondary flex items-center"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Report
+            <ChevronDown className="h-4 w-4 ml-2" />
+          </button>
+          
+          {isExportDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+              <div className="py-1">
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as CSV
+                </button>
+                <button
+                  onClick={() => handleExport('json')}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as JSON
+                </button>
+                <button
+                  onClick={() => handleExport('excel')}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Export as Excel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Key Metrics */}
