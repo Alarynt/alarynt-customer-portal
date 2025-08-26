@@ -198,7 +198,10 @@ const Dashboard = () => {
         <div className="card">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Action Distribution</h3>
-            <button className="btn-secondary text-sm">
+            <button 
+              onClick={() => navigate('/actions/create')}
+              className="btn-secondary text-sm"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create Action
             </button>

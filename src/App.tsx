@@ -6,6 +6,7 @@ import Header from './components/Header'
 import RulesManagement from './components/RulesManagement'
 import CreateRule from './components/CreateRule'
 import ActionsManagement from './components/ActionsManagement'
+import CreateAction from './components/CreateAction'
 import Analytics from './components/Analytics'
 import Activities from './components/Activities'
 import Help from './components/Help'
@@ -53,6 +54,7 @@ function App() {
           <Route path="/rules" element={<RulesManagement />} />
           <Route path="/rules/create" element={<CreateRule />} />
           <Route path="/actions" element={<ActionsManagement />} />
+          <Route path="/actions/create" element={<CreateAction />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/activities" element={<Activities />} />
           <Route path="/help" element={<Help />} />
