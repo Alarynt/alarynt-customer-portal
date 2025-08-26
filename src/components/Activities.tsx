@@ -134,6 +134,11 @@ const Activities = () => {
     setCurrentPage(1) // Reset to first page when filters change
   }, [activities, searchTerm, typeFilter, statusFilter, dateRange, sortField, sortDirection])
 
+  // Reset to first page when items per page changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage])
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
