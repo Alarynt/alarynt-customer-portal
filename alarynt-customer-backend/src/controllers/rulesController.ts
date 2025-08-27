@@ -50,7 +50,7 @@ export const getRules = asyncHandler(async (req: Request, res: Response): Promis
 
   const response: PaginatedResponse<Rule> = {
     success: true,
-    data: rules.map(rule => ({
+    data: rules.map((rule: any) => ({
       id: rule.id,
       name: rule.name,
       description: rule.description,
@@ -373,9 +373,9 @@ export const getRuleStats = asyncHandler(async (req: Request, res: Response): Pr
     lastExecuted: rule.lastExecuted,
     recentExecutions: executions.length,
     avgResponseTime: executions.length > 0
-      ? executions.reduce((acc, exec) => acc + (exec.totalResponseTime || 0), 0) / executions.length
+      ? executions.reduce((acc: number, exec: any) => acc + (exec.totalResponseTime || 0), 0) / executions.length
       : 0,
-    executionHistory: executions.map(exec => ({
+    executionHistory: executions.map((exec: any) => ({
       executionId: exec.executionId,
       startTime: exec.startTime,
       endTime: exec.endTime,
