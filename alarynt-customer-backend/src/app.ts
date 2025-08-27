@@ -11,12 +11,11 @@ import { globalErrorHandler, notFound } from './middleware/errorHandler';
 
 // Import routes (will create these next)
 import authRoutes from './routes/auth';
-// Temporarily disabled until schemas are created
-// import rulesRoutes from './routes/rules';
-// import actionsRoutes from './routes/actions';
-// import activitiesRoutes from './routes/activities';
-// import dashboardRoutes from './routes/dashboard';
-// import analyticsRoutes from './routes/analytics';
+import rulesRoutes from './routes/rules';
+import actionsRoutes from './routes/actions';
+import activitiesRoutes from './routes/activities';
+import dashboardRoutes from './routes/dashboard';
+import analyticsRoutes from './routes/analytics';
 
 const app = express();
 
@@ -110,12 +109,11 @@ app.get('/health', (req, res) => {
 const apiPrefix = `${config.apiPrefix}/${config.apiVersion}`;
 
 app.use(`${apiPrefix}/auth`, authRoutes);
-// Temporarily disabled until schemas are created
-// app.use(`${apiPrefix}/rules`, rulesRoutes);
-// app.use(`${apiPrefix}/actions`, actionsRoutes);
-// app.use(`${apiPrefix}/activities`, activitiesRoutes);
-// app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
-// app.use(`${apiPrefix}/analytics`, analyticsRoutes);
+app.use(`${apiPrefix}/rules`, rulesRoutes);
+app.use(`${apiPrefix}/actions`, actionsRoutes);
+app.use(`${apiPrefix}/activities`, activitiesRoutes);
+app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
+app.use(`${apiPrefix}/analytics`, analyticsRoutes);
 
 // Swagger UI configuration options
 const swaggerOptions = {
@@ -153,12 +151,11 @@ app.get(`${apiPrefix}/info`, (req, res) => {
     version: '1.0.0',
     endpoints: {
       auth: `${apiPrefix}/auth`,
-      // Temporarily disabled until schemas are created
-      // rules: `${apiPrefix}/rules`,
-      // actions: `${apiPrefix}/actions`,
-      // activities: `${apiPrefix}/activities`,
-      // dashboard: `${apiPrefix}/dashboard`,
-      // analytics: `${apiPrefix}/analytics`
+      rules: `${apiPrefix}/rules`,
+      actions: `${apiPrefix}/actions`,
+      activities: `${apiPrefix}/activities`,
+      dashboard: `${apiPrefix}/dashboard`,
+      analytics: `${apiPrefix}/analytics`
     },
     documentation: `Visit ${req.protocol}://${req.get('host')}${apiPrefix}/docs for interactive API documentation`
   });

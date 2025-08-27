@@ -115,7 +115,7 @@ class ApiService {
   }
 
   // Rules endpoints
-  async getRules(page = 1, limit = 10): Promise<ApiResponse<{ rules: Rule[], total: number }>> {
+  async getRules(page = 1, limit = 10): Promise<ApiResponse<Rule[]>> {
     return this.request(`/rules?page=${page}&limit=${limit}`)
   }
 
@@ -146,7 +146,7 @@ class ApiService {
   }
 
   // Actions endpoints
-  async getActions(page = 1, limit = 10): Promise<ApiResponse<{ actions: Action[], total: number }>> {
+  async getActions(page = 1, limit = 10): Promise<ApiResponse<Action[]>> {
     return this.request(`/actions?page=${page}&limit=${limit}`)
   }
 
@@ -206,7 +206,7 @@ class ApiService {
   }
 
   // Activities endpoints
-  async getActivities(page = 1, limit = 50): Promise<ApiResponse<{ activities: any[], total: number }>> {
+  async getActivities(page = 1, limit = 10): Promise<ApiResponse<any[]>> {
     return this.request(`/activities?page=${page}&limit=${limit}`)
   }
 

@@ -12,19 +12,7 @@ import {
   CheckCircle
 } from 'lucide-react'
 import apiService from '../services/api'
-
-interface Rule {
-  id: string
-  name: string
-  description: string
-  dsl: string
-  status: 'active' | 'inactive' | 'draft'
-  priority: number
-  createdAt: string
-  lastExecuted?: string
-  executionCount: number
-  successRate: number
-}
+import type { Rule } from '../services/api'
 
 const RulesManagement = () => {
   const navigate = useNavigate()
@@ -56,6 +44,10 @@ const RulesManagement = () => {
     loadRules()
   }, [])
 
+  useEffect(() => {
+    console.log('Rules state updated:', rules)
+  }, [rules])
+
   const loadRules = async () => {
     try {
       setLoading(true)
@@ -63,9 +55,11 @@ const RulesManagement = () => {
       
       const response = await apiService.getRules(1, 100) // Load first 100 rules
       
-      if (response.success && response.data?.rules) {
-        setRules(response.data.rules)
+      if (response.success && response.data) {
+        console.log('Rules loaded successfully:', response.data)
+        setRules(response.data)
       } else {
+        console.error('Failed to load rules:', response)
         setError('Failed to load rules')
       }
     } catch (err: any) {
@@ -95,7 +89,9 @@ const RulesManagement = () => {
         dsl: dslCode,
         status: 'draft',
         priority: rules.length + 1,
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: 'admin_001',
         executionCount: 0,
         successRate: 0
       }
