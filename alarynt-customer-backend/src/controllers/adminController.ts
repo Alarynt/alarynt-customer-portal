@@ -198,6 +198,22 @@ export const getAllCustomers = asyncHandler(async (req: AuthenticatedRequest, re
     // Get activity count for this customer
     const totalActivities = await schemas.Activity.countDocuments({ userId: customer._id });
 
+    // Get rule execution count for this customer's rules
+    const customerRules = await schemas.Rule.find({ createdBy: customer.id }).select('id');
+    const customerRuleIds = customerRules.map(rule => rule.id);
+    const totalRuleExecutions = await schemas.RuleExecution.countDocuments({ 
+      ruleId: { $in: customerRuleIds } 
+    });
+
+    // Get action execution count from rule executions (actions within executions)
+    const actionExecutions = await schemas.RuleExecution.aggregate([
+      { $match: { ruleId: { $in: customerRuleIds } } },
+      { $unwind: { path: '$actions', preserveNullAndEmptyArrays: true } },
+      { $match: { 'actions.actionId': { $exists: true } } },
+      { $count: 'totalActionExecutions' }
+    ]);
+    const totalActionExecutions = actionExecutions.length > 0 ? actionExecutions[0].totalActionExecutions : 0;
+
     // Calculate success rate based on recent activities
     const recentActivities = await schemas.Activity.find({ 
       userId: customer._id 
@@ -225,8 +241,11 @@ export const getAllCustomers = asyncHandler(async (req: AuthenticatedRequest, re
       activeRules,
       totalActions,
       totalActivities,
+      totalRuleExecutions,
+      totalActionExecutions,
       successRate,
       lastActivity: lastActivity?.timestamp || customer.createdAt,
+      lastLogin: customer.lastLogin,
       createdAt: customer.createdAt
     };
   }));
@@ -265,6 +284,22 @@ export const getCustomerMetrics = asyncHandler(async (req: AuthenticatedRequest,
   });
   const totalActions = await schemas.Action.countDocuments({ createdBy: customerId });
   const totalActivities = await schemas.Activity.countDocuments({ userId: customer._id });
+
+  // Get rule execution count for this customer's rules
+  const customerRules = await schemas.Rule.find({ createdBy: customerId }).select('id');
+  const customerRuleIds = customerRules.map(rule => rule.id);
+  const totalRuleExecutions = await schemas.RuleExecution.countDocuments({ 
+    ruleId: { $in: customerRuleIds } 
+  });
+
+  // Get action execution count from rule executions (actions within executions)
+  const actionExecutions = await schemas.RuleExecution.aggregate([
+    { $match: { ruleId: { $in: customerRuleIds } } },
+    { $unwind: { path: '$actions', preserveNullAndEmptyArrays: true } },
+    { $match: { 'actions.actionId': { $exists: true } } },
+    { $count: 'totalActionExecutions' }
+  ]);
+  const totalActionExecutions = actionExecutions.length > 0 ? actionExecutions[0].totalActionExecutions : 0;
 
   // Calculate success rate
   const recentActivities = await schemas.Activity.find({ 
@@ -368,8 +403,11 @@ export const getCustomerMetrics = asyncHandler(async (req: AuthenticatedRequest,
       activeRules,
       totalActions,
       totalActivities,
+      totalRuleExecutions,
+      totalActionExecutions,
       successRate,
       lastActivity: lastActivity?.timestamp || customer.createdAt,
+      lastLogin: customer.lastLogin,
       createdAt: customer.createdAt
     },
     ruleExecutions: executionsData.map(item => ({

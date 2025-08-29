@@ -39,8 +39,11 @@ export interface CustomerOverview {
   activeRules: number
   totalActions: number
   totalActivities: number
+  totalRuleExecutions: number
+  totalActionExecutions: number
   successRate: number
   lastActivity: Date
+  lastLogin?: Date
   createdAt: Date
 }
 

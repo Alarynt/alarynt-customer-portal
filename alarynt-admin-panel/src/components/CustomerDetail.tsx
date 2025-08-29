@@ -33,54 +33,21 @@ const CustomerDetail = () => {
         setLoading(true)
         setError('')
 
-        // Mock data until backend is implemented
-        // TODO: Replace with adminApiService.getCustomerMetrics(customerId)
-        const mockCustomerData: CustomerMetrics = {
-          customer: {
-            id: customerId,
-            email: 'admin@acme-corp.com',
-            name: 'John Smith',
-            company: 'Acme Corp',
-            totalRules: 45,
-            activeRules: 42,
-            totalActions: 22,
-            totalActivities: 2847,
-            successRate: 96.5,
-            lastActivity: new Date('2024-01-26T14:30:00'),
-            createdAt: new Date('2023-06-15T10:00:00')
-          },
-          ruleExecutions: [
-            { date: 'Jan 20', executions: 156, success: 152, failed: 4 },
-            { date: 'Jan 21', executions: 189, success: 182, failed: 7 },
-            { date: 'Jan 22', executions: 134, success: 128, failed: 6 },
-            { date: 'Jan 23', executions: 167, success: 161, failed: 6 },
-            { date: 'Jan 24', executions: 198, success: 190, failed: 8 },
-            { date: 'Jan 25', executions: 145, success: 140, failed: 5 },
-            { date: 'Jan 26', executions: 223, success: 218, failed: 5 }
-          ],
-          actionDistribution: [
-            { name: 'Email Alerts', value: 45, color: '#3B82F6' },
-            { name: 'Webhooks', value: 30, color: '#10B981' },
-            { name: 'Database Updates', value: 15, color: '#F59E0B' },
-            { name: 'SMS Notifications', value: 10, color: '#EF4444' }
-          ],
-          recentActivity: [
-            { id: '1', type: 'rule_executed', message: 'High Value Customer Alert triggered', time: '2 minutes ago', status: 'success' },
-            { id: '2', type: 'action_completed', message: 'Email notification sent successfully', time: '5 minutes ago', status: 'success' },
-            { id: '3', type: 'rule_executed', message: 'Inventory check rule processed', time: '12 minutes ago', status: 'success' },
-            { id: '4', type: 'action_failed', message: 'Webhook delivery failed - retrying', time: '18 minutes ago', status: 'warning' },
-            { id: '5', type: 'rule_executed', message: 'Payment processing rule completed', time: '25 minutes ago', status: 'success' }
-          ],
-          performanceStats: {
-            avgResponseTime: 145,
-            totalExecutions: 1212,
-            totalSuccess: 1167,
-            totalFailures: 45,
-            uptime: 99.2
+        // Load real customer data from backend
+        const customerMetricsResponse = await adminApiService.getCustomerMetrics(customerId)
+        if (customerMetricsResponse.success && customerMetricsResponse.data) {
+          // Convert timestamp strings to Date objects
+          const formattedCustomerData = {
+            ...customerMetricsResponse.data,
+            customer: {
+              ...customerMetricsResponse.data.customer,
+              lastActivity: new Date(customerMetricsResponse.data.customer.lastActivity),
+              lastLogin: customerMetricsResponse.data.customer.lastLogin ? new Date(customerMetricsResponse.data.customer.lastLogin) : undefined,
+              createdAt: new Date(customerMetricsResponse.data.customer.createdAt)
+            }
           }
+          setCustomerData(formattedCustomerData)
         }
-
-        setCustomerData(mockCustomerData)
       } catch (err: any) {
         console.error('Failed to load customer data:', err)
         setError('Failed to load customer data. Please try refreshing the page.')
@@ -184,6 +151,12 @@ const CustomerDetail = () => {
                   <Calendar className="h-4 w-4 mr-2" />
                   Customer since {customerData.customer.createdAt.toLocaleDateString()}
                 </div>
+                {customerData.customer.lastLogin && (
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Last login: {customerData.customer.lastLogin.toLocaleDateString()} {customerData.customer.lastLogin.toLocaleTimeString()}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -191,7 +164,7 @@ const CustomerDetail = () => {
       </div>
 
       {/* Performance metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-8">
         <div className="card">
           <div className="flex items-center">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -199,7 +172,7 @@ const CustomerDetail = () => {
             </div>
             <div className="ml-3">
               <p className="text-xs font-medium text-gray-600">Total Rules</p>
-              <p className="text-xl font-bold text-gray-900">{customerData.customer.totalRules}</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.totalRules}</p>
               <p className="text-xs text-green-600">{customerData.customer.activeRules} active</p>
             </div>
           </div>
@@ -212,7 +185,7 @@ const CustomerDetail = () => {
             </div>
             <div className="ml-3">
               <p className="text-xs font-medium text-gray-600">Total Actions</p>
-              <p className="text-xl font-bold text-gray-900">{customerData.customer.totalActions}</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.totalActions}</p>
             </div>
           </div>
         </div>
@@ -224,7 +197,31 @@ const CustomerDetail = () => {
             </div>
             <div className="ml-3">
               <p className="text-xs font-medium text-gray-600">Activities</p>
-              <p className="text-xl font-bold text-gray-900">{customerData.customer.totalActivities.toLocaleString()}</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.totalActivities.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center">
+            <div className="p-2 bg-indigo-100 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div className="ml-3">
+              <p className="text-xs font-medium text-gray-600">Rule Execs</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.totalRuleExecutions?.toLocaleString() || '0'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center">
+            <div className="p-2 bg-emerald-100 rounded-lg">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div className="ml-3">
+              <p className="text-xs font-medium text-gray-600">Action Execs</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.totalActionExecutions?.toLocaleString() || '0'}</p>
             </div>
           </div>
         </div>
@@ -236,19 +233,19 @@ const CustomerDetail = () => {
             </div>
             <div className="ml-3">
               <p className="text-xs font-medium text-gray-600">Success Rate</p>
-              <p className="text-xl font-bold text-gray-900">{customerData.customer.successRate}%</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.customer.successRate}%</p>
             </div>
           </div>
         </div>
 
         <div className="card">
           <div className="flex items-center">
-            <div className="p-2 bg-emerald-100 rounded-lg">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <Clock className="h-5 w-5 text-teal-600" />
             </div>
             <div className="ml-3">
               <p className="text-xs font-medium text-gray-600">Avg Response</p>
-              <p className="text-xl font-bold text-gray-900">{customerData.performanceStats.avgResponseTime}ms</p>
+              <p className="text-lg font-bold text-gray-900">{customerData.performanceStats.avgResponseTime}ms</p>
             </div>
           </div>
         </div>
