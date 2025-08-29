@@ -706,7 +706,6 @@ const ruleExecutionSchema = new mongoose.Schema({
 // ===============================
 
 // User indexes
-userSchema.index({ email: 1 });
 userSchema.index({ company: 1 });
 userSchema.index({ createdAt: -1 });
 
@@ -748,14 +747,12 @@ orderSchema.index({ total: -1 });
 orderSchema.index({ createdAt: -1 });
 
 // Product indexes
-productSchema.index({ sku: 1 });
 productSchema.index({ category: 1 });
 productSchema.index({ inventory: 1 });
 productSchema.index({ name: 'text', description: 'text' });
 
 // Rule Execution indexes
 ruleExecutionSchema.index({ ruleId: 1, startTime: -1 });
-ruleExecutionSchema.index({ executionId: 1 });
 ruleExecutionSchema.index({ startTime: -1 });
 ruleExecutionSchema.index({ status: 1 });
 

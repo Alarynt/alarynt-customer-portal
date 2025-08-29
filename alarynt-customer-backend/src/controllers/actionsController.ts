@@ -52,7 +52,7 @@ export const getActions = asyncHandler(async (req: Request, res: Response): Prom
 
   const response: PaginatedResponse<Action> = {
     success: true,
-    data: actions.map(action => ({
+    data: actions.map((action: any) => ({
       id: action.id,
       name: action.name,
       description: action.description,

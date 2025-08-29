@@ -87,22 +87,19 @@ const CreateAction = () => {
     setIsSaving(true)
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const newAction: Action = {
-        id: Date.now().toString(),
+      const actionData = {
         name: formData.name,
         description: formData.description,
         type: formData.type,
         config: formData.config,
-        status: saveAndActivate ? 'active' : formData.status,
-        createdAt: new Date().toISOString().split('T')[0],
-        executionCount: 0,
-        successRate: 0
+        status: saveAndActivate ? 'active' : formData.status
       }
       
-      // In a real app, we would save to an API here
+      const response = await apiService.createAction(actionData)
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create action')
+      }
       console.log('Saving action:', newAction)
       
       // Navigate back to actions management

@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
 
-// Import schemas from the alarynt-mongodb folder
-const schemasPath = '../../../alarynt-mongodb/schemas.js';
-const schemas = require(schemasPath);
+// Import local schemas
+import { schemas } from '../schemas';
 
 export interface DatabaseConfig {
   uri: string;
@@ -16,7 +15,6 @@ export const databaseConfig: DatabaseConfig = {
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-    bufferMaxEntries: 0,
     bufferCommands: false,
   }
 };

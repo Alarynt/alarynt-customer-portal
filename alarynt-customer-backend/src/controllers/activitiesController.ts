@@ -91,7 +91,7 @@ export const getActivitiesByType = asyncHandler(async (req: Request, res: Respon
   const { type } = req.params;
   const { page = 1, limit = 20 } = req.query;
 
-  const skip = (page - 1) * Number(limit);
+  const skip = (Number(page) - 1) * Number(limit);
 
   const [activities, total] = await Promise.all([
     schemas.Activity
@@ -142,7 +142,7 @@ export const getActivitiesByUser = asyncHandler(async (req: Request, res: Respon
   const { userId } = req.params;
   const { page = 1, limit = 20 } = req.query;
 
-  const skip = (page - 1) * Number(limit);
+  const skip = (Number(page) - 1) * Number(limit);
 
   const [activities, total] = await Promise.all([
     schemas.Activity

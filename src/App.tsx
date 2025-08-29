@@ -10,35 +10,75 @@ import CreateAction from './components/CreateAction'
 import Analytics from './components/Analytics'
 import Activities from './components/Activities'
 import Help from './components/Help'
+import apiService from './services/api'
 import './App.css'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is logged in (stored in localStorage for demo)
-    const token = localStorage.getItem('authToken')
-    const userData = localStorage.getItem('userData')
-    
-    if (token && userData) {
-      setIsAuthenticated(true)
-      setUser(JSON.parse(userData))
+    // Validate existing token on app load
+    const validateToken = async () => {
+      const token = localStorage.getItem('authToken')
+      const userData = localStorage.getItem('userData')
+      
+      if (token && userData) {
+        try {
+          // Validate token with backend
+          const response = await apiService.validateToken()
+          if (response.success) {
+            // Get current user data to ensure it's up to date
+            const userResponse = await apiService.getCurrentUser()
+            if (userResponse.success && userResponse.data) {
+              setIsAuthenticated(true)
+              setUser(userResponse.data)
+              localStorage.setItem('userData', JSON.stringify(userResponse.data))
+            }
+          } else {
+            // Token invalid, clear storage
+            handleLogout()
+          }
+        } catch (error) {
+          console.error('Token validation failed:', error)
+          handleLogout()
+        }
+      }
+      setIsLoading(false)
     }
+
+    validateToken()
   }, [])
 
-  const handleLogin = (userData: any) => {
+  const handleLogin = (userData: any, token: string) => {
     setIsAuthenticated(true)
     setUser(userData)
-    localStorage.setItem('authToken', 'demo-token')
+    localStorage.setItem('authToken', token)
     localStorage.setItem('userData', JSON.stringify(userData))
   }
 
-  const handleLogout = () => {
-    setIsAuthenticated(false)
-    setUser(null)
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('userData')
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to invalidate token on backend
+      await apiService.logout()
+    } catch (error) {
+      console.error('Logout API call failed:', error)
+    } finally {
+      // Always clear local state regardless of API call result
+      setIsAuthenticated(false)
+      setUser(null)
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userData')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {

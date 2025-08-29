@@ -19,7 +19,6 @@ const config = {
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 5000,
     socketTimeoutMS: 45000,
-    bufferMaxEntries: 0,
     bufferCommands: false,
   }
 };
@@ -116,7 +115,8 @@ AND customer.tier == "premium"
 THEN send_email(to: "sales@alarynt.com", subject: "High Value Order Alert")`,
       status: 'active',
       priority: 1,
-      createdBy: adminUser._id
+      createdBy: adminUser._id,
+      createdAt: new Date()
     });
     await sampleRule.save();
     console.log('✅ Sample rule created');

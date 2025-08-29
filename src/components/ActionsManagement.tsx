@@ -14,6 +14,7 @@ import {
   TestTube,
   Settings
 } from 'lucide-react'
+import apiService from '../services/api'
 
 interface Action {
   id: string
@@ -39,6 +40,8 @@ const ActionsManagement = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedActionType, setSelectedActionType] = useState<string>('email')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     // Mock data
