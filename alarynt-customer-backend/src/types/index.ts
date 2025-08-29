@@ -93,7 +93,7 @@ export interface UpdateActionRequest extends Partial<CreateActionRequest> {
 // Activity types
 export interface Activity {
   id: string;
-  type: 'rule_created' | 'rule_updated' | 'rule_deleted' | 'action_executed' | 'action_failed' | 'rule_triggered' | 'user_login' | 'user_logout' | 'system_error' | 'system_maintenance';
+  type: 'rule_created' | 'rule_updated' | 'rule_deleted' | 'rule_executed' | 'action_created' | 'action_updated' | 'action_deleted' | 'action_executed' | 'action_completed' | 'action_failed' | 'rule_triggered' | 'user_login' | 'user_logout' | 'admin_login' | 'admin_logout' | 'system_error' | 'system_maintenance';
   message: string;
   timestamp: Date;
   status: 'success' | 'warning' | 'error' | 'info';
