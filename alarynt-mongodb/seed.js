@@ -272,7 +272,7 @@ async function seedOrders() {
              const price = product.price * faker.number.float({ min: 0.8, max: 1.2, multipleOf: 0.01 });
       
       items.push({
-        productId: product.id,
+        productId: product._id,
         productName: product.name,
         quantity,
         price,
@@ -290,7 +290,7 @@ async function seedOrders() {
     
     const order = new schemas.Order({
       id: `ord_${faker.string.alphanumeric(8)}`,
-      customerId: customer.id,
+      customerId: customer._id,
       customerName: customer.name,
       customerEmail: customer.email,
       items,
@@ -299,6 +299,7 @@ async function seedOrders() {
       shipping,
       total,
       status: faker.helpers.arrayElement(statuses),
+      paymentStatus: faker.helpers.arrayElement(['pending', 'paid', 'failed', 'refunded']),
       paymentMethod: faker.helpers.arrayElement(paymentMethods),
       shippingAddress: customer.address,
       billingAddress: faker.datatype.boolean(0.7) ? customer.address : {
@@ -410,8 +411,8 @@ async function seedActivities() {
   
   const activities = [];
   const types = [
-    'user_login', 'rule_created', 'rule_executed', 'action_triggered',
-    'system_maintenance', 'data_backup', 'error_occurred', 'user_logout'
+    'user_login', 'rule_created', 'rule_triggered', 'action_executed',
+    'system_maintenance', 'system_error', 'user_logout'
   ];
   const statuses = ['success', 'warning', 'error', 'info'];
 
@@ -478,17 +479,16 @@ async function seedPerformanceData() {
   const metrics = ['response_time', 'throughput', 'error_rate', 'cpu_usage', 'memory_usage'];
 
   for (let i = 0; i < SEED_CONFIG.performanceData; i++) {
+    const executions = faker.number.int({ min: 10, max: 1000 });
+    const success = faker.number.int({ min: executions * 0.8, max: executions });
+    const failed = executions - success;
+    
     const data = new schemas.PerformanceData({
-      id: `perf_${faker.string.alphanumeric(8)}`,
-      timestamp: faker.date.recent({ days: 30 }),
-      metrics: {
-        response_time: faker.number.float({ min: 10, max: 2000, multipleOf: 1 }),
-        throughput: faker.number.int({ min: 100, max: 10000 }),
-        error_rate: faker.number.float({ min: 0, max: 5, multipleOf: 0.01 }),
-        cpu_usage: faker.number.float({ min: 10, max: 95, multipleOf: 0.1 }),
-        memory_usage: faker.number.float({ min: 20, max: 85, multipleOf: 0.1 })
-      },
-      system: faker.helpers.arrayElement(['web-server-1', 'web-server-2', 'api-gateway', 'database-1', 'cache-server'])
+      date: faker.date.recent({ days: 30 }),
+      executions,
+      success,
+      failed,
+      responseTime: faker.number.float({ min: 10, max: 2000, multipleOf: 1 })
     });
     
     performanceData.push(data);
@@ -512,29 +512,42 @@ async function seedRuleExecutions() {
     const status = faker.helpers.arrayElement(statuses);
     const executionTime = faker.number.int({ min: 10, max: 5000 });
     
+    const startTime = faker.date.recent({ days: 60 });
+    const endTime = faker.date.between({ from: startTime, to: new Date() });
+    const totalResponseTime = endTime.getTime() - startTime.getTime();
+    
     const execution = new schemas.RuleExecution({
-      id: `exec_${faker.string.alphanumeric(8)}`,
-      ruleId: rule.id,
-      ruleName: rule.name,
-      status,
-      executionTime,
-      triggeredBy: faker.helpers.arrayElement(['order_created', 'customer_updated', 'product_low_stock', 'scheduled_task']),
-      input: {
-        customerId: faker.helpers.arrayElement(createdCustomers).id,
-        orderId: faker.datatype.boolean(0.7) ? faker.helpers.arrayElement(createdOrders).id : null,
-        productId: faker.datatype.boolean(0.5) ? faker.helpers.arrayElement(createdProducts).id : null
+      ruleId: rule._id,
+      executionId: `exec_${faker.string.alphanumeric(8)}`,
+      triggeredBy: {
+        eventType: faker.helpers.arrayElement(['order_created', 'customer_updated', 'product_low_stock', 'scheduled_task']),
+        eventData: {
+          customerId: faker.helpers.arrayElement(createdCustomers)._id,
+          orderId: faker.datatype.boolean(0.7) ? faker.helpers.arrayElement(createdOrders)._id : null,
+          productId: faker.datatype.boolean(0.5) ? faker.helpers.arrayElement(createdProducts)._id : null
+        }
       },
-      output: status === 'success' ? {
-        action: 'email_sent',
-        recipient: faker.internet.email(),
-        result: 'success'
-      } : null,
-      error: status === 'failed' ? {
-        message: 'Email service temporarily unavailable',
-        code: 'SERVICE_UNAVAILABLE',
-        stack: faker.lorem.paragraphs(2)
-      } : null,
-      createdAt: faker.date.recent({ days: 60 })
+      conditions: [
+        {
+          condition: 'order.total > 1000',
+          result: faker.datatype.boolean(),
+          evaluatedAt: startTime
+        }
+      ],
+      actionsExecuted: [
+        {
+          actionId: faker.helpers.arrayElement(createdActions)._id,
+          status: faker.helpers.arrayElement(['success', 'failed', 'skipped']),
+          executedAt: endTime,
+          responseTime: totalResponseTime,
+          result: { message: 'Action executed successfully' }
+        }
+      ],
+      startTime,
+      endTime,
+      totalResponseTime,
+      status: faker.helpers.arrayElement(['success', 'partial_success', 'failed']),
+      errorMessage: status === 'failed' ? 'Email service temporarily unavailable' : null
     });
     
     executions.push(execution);
@@ -558,17 +571,15 @@ async function seedErrorAnalyses() {
     const errorType = faker.helpers.arrayElement(errorTypes);
     
     const errorAnalysis = new schemas.ErrorAnalysis({
-      id: `error_${faker.string.alphanumeric(8)}`,
       type: errorType,
-      message: generateErrorMessage(errorType),
-      severity: faker.helpers.arrayElement(severities),
       count: faker.number.int({ min: 1, max: 50 }),
-      firstOccurred: faker.date.past({ months: 3 }),
-      lastOccurred: faker.date.recent({ days: 7 }),
-      affectedRules: faker.helpers.arrayElements(createdRules.map(r => r.id), { min: 1, max: 5 }),
-      stackTrace: faker.lorem.paragraphs(3),
-      isResolved: faker.datatype.boolean(0.6),
-      createdAt: faker.date.past({ months: 2 })
+      percentage: faker.number.float({ min: 0.1, max: 15, multipleOf: 0.1 }),
+      impact: faker.helpers.arrayElement(['Low', 'Medium', 'High', 'Critical']),
+      firstOccurrence: faker.date.past({ months: 3 }),
+      lastOccurrence: faker.date.recent({ days: 7 }),
+      description: generateErrorMessage(errorType),
+      resolution: faker.datatype.boolean(0.6) ? faker.lorem.sentence() : null,
+      isResolved: faker.datatype.boolean(0.6)
     });
     
     errorAnalyses.push(errorAnalysis);
