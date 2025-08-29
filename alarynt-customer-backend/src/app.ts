@@ -16,6 +16,7 @@ import actionsRoutes from './routes/actions';
 import activitiesRoutes from './routes/activities';
 import dashboardRoutes from './routes/dashboard';
 import analyticsRoutes from './routes/analytics';
+import adminRoutes from './routes/admin';
 
 const app = express();
 
@@ -114,6 +115,7 @@ app.use(`${apiPrefix}/actions`, actionsRoutes);
 app.use(`${apiPrefix}/activities`, activitiesRoutes);
 app.use(`${apiPrefix}/dashboard`, dashboardRoutes);
 app.use(`${apiPrefix}/analytics`, analyticsRoutes);
+app.use(`${apiPrefix}/admin`, adminRoutes);
 
 // Swagger UI configuration options
 const swaggerOptions = {
@@ -155,7 +157,8 @@ app.get(`${apiPrefix}/info`, (req, res) => {
       actions: `${apiPrefix}/actions`,
       activities: `${apiPrefix}/activities`,
       dashboard: `${apiPrefix}/dashboard`,
-      analytics: `${apiPrefix}/analytics`
+      analytics: `${apiPrefix}/analytics`,
+      admin: `${apiPrefix}/admin`
     },
     documentation: `Visit ${req.protocol}://${req.get('host')}${apiPrefix}/docs for interactive API documentation`
   });
