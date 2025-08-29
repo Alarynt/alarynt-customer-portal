@@ -61,6 +61,7 @@ export const authenticateToken = async (
 
     // Attach user to request object
     req.user = {
+      _id: user._id?.toString(),
       id: user.id,
       email: user.email,
       name: user.name,
