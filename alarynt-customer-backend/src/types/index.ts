@@ -2,6 +2,7 @@ import { Request } from 'express';
 
 // User types
 export interface User {
+  _id?: string; // MongoDB ObjectId
   id: string;
   email: string;
   name: string;
