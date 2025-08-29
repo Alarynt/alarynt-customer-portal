@@ -35,6 +35,27 @@ export const authenticateToken = async (
         return;
       }
       userId = adminUser._id.toString();
+    } else if (token.startsWith('admin-token-')) {
+      // Admin token format: admin-token-${Date.now()}-${user.id}
+      const parts = token.split('-');
+      if (parts.length >= 4) {
+        const userCustomId = parts.slice(3).join('-'); // Handle case where user.id might contain hyphens
+        const user = await schemas.User.findOne({ id: userCustomId }).select('-password');
+        if (!user) {
+          res.status(401).json({
+            success: false,
+            error: 'Admin user not found'
+          } as ApiResponse);
+          return;
+        }
+        userId = user._id.toString();
+      } else {
+        res.status(401).json({
+          success: false,
+          error: 'Invalid admin token format'
+        } as ApiResponse);
+        return;
+      }
     } else {
       // Real JWT token
       const decoded = jwt.verify(token, config.jwtSecret) as { userId: string };

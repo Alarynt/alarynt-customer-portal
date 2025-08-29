@@ -60,7 +60,7 @@ const activitySchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['rule_created', 'rule_updated', 'rule_deleted', 'action_executed', 'action_failed', 'rule_triggered', 'user_login', 'user_logout', 'system_error', 'system_maintenance']
+    enum: ['rule_created', 'rule_updated', 'rule_deleted', 'rule_executed', 'action_created', 'action_updated', 'action_deleted', 'action_executed', 'action_completed', 'action_failed', 'rule_triggered', 'user_login', 'user_logout', 'admin_login', 'admin_logout', 'system_error', 'system_maintenance']
   },
   message: {
     type: String,
